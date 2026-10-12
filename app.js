@@ -1,3 +1,36 @@
+// Browser-side access gate for the static prototype; not server authentication.
+// Change this value to choose a different prototype password.
+const prototypePassword = 'SuT2023!';
+let prototypeUnlocked = false;
+
+const passwordForm = document.querySelector('#password-form');
+const passwordInput = document.querySelector('#prototype-password');
+const passwordError = document.querySelector('#password-error');
+
+passwordInput.addEventListener('input', () => {
+    passwordError.hidden = true;
+    passwordInput.removeAttribute('aria-invalid');
+});
+
+passwordForm.addEventListener('submit', event => {
+    event.preventDefault();
+
+    if (passwordInput.value !== prototypePassword) {
+        passwordError.hidden = false;
+        passwordInput.setAttribute('aria-invalid', 'true');
+        passwordInput.focus();
+        passwordInput.select();
+        return;
+    }
+
+    prototypeUnlocked = true;
+    passwordForm.reset();
+    document.querySelector('#password-gate').hidden = true;
+    document.body.classList.remove('password-locked');
+    render();
+    main.focus();
+});
+
 const paths = {
     home: 'M4 11 12 4l8 7v10h-6v-7h-4v7H4Z',
     card: 'M3 6h18v12H3Z M3 10h18 M6 14h4',
@@ -119,7 +152,7 @@ const main = document.querySelector('#main'), dialog = document.querySelector('#
 let signedOut = false;
 
 function render() {
-    if (signedOut)
+    if (!prototypeUnlocked || signedOut)
         return;
     let route = location.hash.slice(1) || 'start';
     if (!navItems.some(i => i[2] === route))
