@@ -1,62 +1,431 @@
-const paths={home:'M4 11 12 4l8 7v10h-6v-7h-4v7H4Z',card:'M3 6h18v12H3Z M3 10h18 M6 14h4',pay:'m4 5 14-3 2 12-14 2Z M4 8l12 4 M8 16v3 M6 21h.1 M17 19h.1',pig:'M5 8 3 7v6l3 1 2 6h3v-3h5v3h3l1-6 2-2-2-3V6l-4 1c-3-3-8-2-11 1Z M15 10h.1',loan:'m5 5 13-3 2 10-13 3Z M7 8l8 3 M8 18l-3 3 M8 18l3 3 M17 15v5 M15 18l2-3 2 3',umbrella:'M3 11a9 9 0 0 1 18 0c-3-3-6-3-9 0-3-3-6-3-9 0Z M12 3v-1 M12 11v8c0 3-4 3-4 0',pension:'m12 3-3 5h6Z M7 12h10l-2-3H9Z M3 20h18l-3-6H6Z',contact:'M5 14V9a7 7 0 0 1 14 0v5 M5 9H2v7h5v-7Z M19 9h3v7h-5v-7Z M19 17c0 3-3 4-6 4 M11 21h3',more:'M4 12h.1 M12 12h.1 M20 12h.1',external:'M13 4h7v7 M20 4l-9 9 M9 5H4v15h15v-5',document:'M8 3h8l4 4v13H8Z M16 3v5h4 M8 6H4v17h12 M11 12h6 M11 15h6',consent:'M14 20H4V3h10v4 M18 15a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z M17 18l4 3',shield:'m12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6Z M9 9l6 6 M15 9l-6 6',bell:'M6 17V9a6 6 0 0 1 12 0v8l2 2H4Z M10 21h4 M12 3V1',e:'M4 3h17v18l-5-3-4 3-4-3-4 3Z M15 12H9c0-5 6-5 6-1H9c0 4 4 5 6 2',mailbox:'M3 9h18v12H3Z M8 9V5h7v11 M8 16h7 M12 2v4 M7 21v2 M18 21v2',mail:'M3 5h18v14H3Z m0 0 9 8 9-8',logout:'M9 3H4v18h5 M12 12h10 m-5-5 5 5-5 5'};
-function icon(key){if(key==='payment')return '<span class="icon payment-icon"><img src="assets/payment-24.svg" alt="" aria-hidden="true" width="24" height="24"></span>';if(key==='person')return '<span class="icon initials">NN</span>';if(key==='bankid')return '<span class="icon bankid">iD</span>';if(key==='swish')return '<span class="icon"><span class="swish"></span></span>';return `<span class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[key]||paths.document}" ${key==='more'?'stroke-width="4"':''}/></svg></span>`}
-let state;try{state=JSON.parse(localStorage.getItem('lf-prototype')||'{}')}catch{state={}}state.profile={name:'Namn Namsson',email:'namn.namsson@example.se',phone:'070-123 45 67',...state.profile};state.settings=state.settings||{};function save(){try{localStorage.setItem('lf-prototype',JSON.stringify(state))}catch{toast('Ändringen gäller under den här sessionen.')}}
-const navItems=[['Start','home','start'],['Konton & kort','card','konton'],['Betala & överföra','payment','betala'],['Spara','pig','spara'],['Låna','loan','lana'],['Försäkra','umbrella','forsakra'],['Pension','pension','pension'],['Kontakta oss','contact','kontakt'],['Mer','more','mer'],['Länsförsäkringar.se','external','website']];
-const groups=[['Profil, dina data och dokument',[['person','profile','Namn Namsson','Kontaktuppgifter, kundkännedom, konto för in- och utbetalning'],['document','documents','Avtal och dokument'],['consent','consents','Samtycken']]],['Betal- och säkerhetstjänster',[['bankid','bankid','Hantera BankID'],['swish','swish','Hantera Swish'],['shield','fraud','Extra bedrägeriskydd']]],['Inställningar',[['bell','notifications','Notiser'],['e','receive','Ta emot dokument'],['e','invoice','Ta emot e-faktura'],['mailbox','marketing','Utskick från oss']]]];
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function row(i){return `<button class="row" data-action="${i[1]}">${icon(i[0])}<span class="copy">${esc(i[1]==='profile'?state.profile.name:i[2])}${i[3]?`<small>${i[3]}</small>`:''}</span><span class="chevron" aria-hidden="true"></span></button>`}function card(title,body){return `<section class="card"><h2>${title}</h2>${body}</section>`}
-const main=document.querySelector('#main'),dialog=document.querySelector('#dialog');let signedOut=false;
-function render(){if(signedOut)return;let route=location.hash.slice(1)||'start';if(!navItems.some(i=>i[2]===route))route='mer';document.querySelector('#nav').innerHTML=navItems.map(i=>`<a href="${i[2]==='website'?'https://www.lansforsakringar.se/':'#'+i[2]}" ${i[2]==='website'?'target="_blank" rel="noopener"':''} ${i[2]===route?'aria-current="page"':''}>${icon(i[1])}${i[0]}</a>`).join('');main.classList.toggle('start-page',route==='start');main.innerHTML=route==='start'?'':`<h1>${navItems.find(i=>i[2]===route)[0]}</h1>`;
-if(route==='mer')main.innerHTML+=groups.map(g=>card(g[0],g[1].map(row).join(''))).join('');
-else if(route==='start')main.innerHTML=startPage();
-else if(route==='konton')main.innerHTML+=card('Mina konton','<div class="page-note">Privatkonto <span class="balance">24 580,00 kr</span><small>Exempelkonto · 9020 12 345 67</small></div>'+row(['card','transactions','Visa transaktioner'])+row(['card','cards','Hantera kort']));
-else if(route==='betala')main.innerHTML+=card('Betalningar och överföringar',row(['pay','transfer','Gör en överföring'])+row(['e','invoice','Hantera e-faktura'])+row(['swish','swish','Hantera Swish']));
-else if(route==='kontakt')main.innerHTML+=card('Hur kan vi hjälpa dig?',row(['mail','message','Skriv till oss'])+row(['contact','contact','Kontaktuppgifter']));
-else {const data={spara:['Mitt sparande','Sparkonto','85 200,00 kr'],lana:['Mina lån','Bolån','1 250 000,00 kr'],forsakra:['Mina försäkringar','Hemförsäkring','Aktiv'],pension:['Min pension','Pensionssparande','152 400,00 kr']}[route];main.innerHTML+=card(data[0],`<div class="page-note">${data[1]}<span class="balance">${data[2]}</span><p class="muted">Exempeldata för prototypen.</p></div>`+row(['document','overview','Visa detaljer']));}document.querySelector('#nav').classList.remove('open');document.querySelector('#menu-toggle').setAttribute('aria-expanded','false');}
+const paths = {
+    home: 'M4 11 12 4l8 7v10h-6v-7h-4v7H4Z',
+    card: 'M3 6h18v12H3Z M3 10h18 M6 14h4',
+    pay: 'm4 5 14-3 2 12-14 2Z M4 8l12 4 M8 16v3 M6 21h.1 M17 19h.1',
+    pig: 'M5 8 3 7v6l3 1 2 6h3v-3h5v3h3l1-6 2-2-2-3V6l-4 1c-3-3-8-2-11 1Z M15 10h.1',
+    loan: 'm5 5 13-3 2 10-13 3Z M7 8l8 3 M8 18l-3 3 M8 18l3 3 M17 15v5 M15 18l2-3 2 3',
+    umbrella: 'M3 11a9 9 0 0 1 18 0c-3-3-6-3-9 0-3-3-6-3-9 0Z M12 3v-1 M12 11v8c0 3-4 3-4 0',
+    pension: 'm12 3-3 5h6Z M7 12h10l-2-3H9Z M3 20h18l-3-6H6Z',
+    contact: 'M5 14V9a7 7 0 0 1 14 0v5 M5 9H2v7h5v-7Z M19 9h3v7h-5v-7Z M19 17c0 3-3 4-6 4 M11 21h3',
+    more: 'M4 12h.1 M12 12h.1 M20 12h.1',
+    external: 'M13 4h7v7 M20 4l-9 9 M9 5H4v15h15v-5',
+    document: 'M8 3h8l4 4v13H8Z M16 3v5h4 M8 6H4v17h12 M11 12h6 M11 15h6',
+    consent: 'M14 20H4V3h10v4 M18 15a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z M17 18l4 3',
+    shield: 'm12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6Z M9 9l6 6 M15 9l-6 6',
+    bell: 'M6 17V9a6 6 0 0 1 12 0v8l2 2H4Z M10 21h4 M12 3V1',
+    e: 'M4 3h17v18l-5-3-4 3-4-3-4 3Z M15 12H9c0-5 6-5 6-1H9c0 4 4 5 6 2',
+    mailbox: 'M3 9h18v12H3Z M8 9V5h7v11 M8 16h7 M12 2v4 M7 21v2 M18 21v2',
+    mail: 'M3 5h18v14H3Z m0 0 9 8 9-8',
+    logout: 'M9 3H4v18h5 M12 12h10 m-5-5 5 5-5 5'
+};
 
-function startPage(){
-const accounts=[['Sommarhuset','9022.10.367.XX','15 046,23','15 046,23'],['Privatkonto','9022.10.377.XX','16 243,00','16 243,00'],['Sparkonto','9022.10.338.XX','30 000,18','30 000,18'],['Fasträntekonto m 3 månaders uppsägning','9021.10.149.XX','','45 000,39']];
-const sections=[['Kort','cards'],['Lån','loan'],['Försäkringar','umbrella'],['Försäkringar inom pension och liv','umbrella'],['Pension','pension']];
-return `<section class="start-hero" aria-label="Välkommen Lisa Flitig"><div class="hero-label"><span>15% · Din bonusnivå Guldkund</span><h1>Lisa Flitig</h1></div></section>
-<div class="start-shortcuts" aria-label="Genvägar">${[['home','Översikt','accounts'],['payment','Betala','transfer'],['transfer','Överför','transfer'],['pig','Spara','savings'],['document','Dokument','documents'],['bankid','BankID','bankid']].map(([key,label,action])=>`<button data-action="${action}">${icon(key)}<span>${label}</span></button>`).join('')}</div>
-<div class="start-content"><div class="start-alert error"><span aria-hidden="true">⊗</span>Ett lite längre meddelande för att testa hur det blir</div><div class="start-alert warning"><span aria-hidden="true">⚠</span>Hej, just nu visas inte depåsaldon korrekt.</div>
-<section class="fraud-banner dismissible"><div class="shield-disc">${icon('shield')}</div><div><h2>Vill du ha ett extra skydd mot bedrägerier?</h2><p>Nu kan du stärka ditt digitala skydd mot bedrägerier med vår kostnadsfria funktion.</p><div class="banner-actions"><button class="primary" data-action="fraud">Läs mer om skyddet</button><button class="link-button" data-dismiss>Inte just nu, tack</button></div></div></section>
-<section class="account-banner dismissible">${icon('pay')}<p><strong>Hej Lisa!</strong> Lägg till ett verifierat konto för att förenkla framtida in- och utbetalningar. Det tar bara någon minut.</p><button class="primary" data-action="verifiedaccount">Uppdatera konto</button><button class="dismiss" data-dismiss aria-label="Stäng kontopåminnelse">×</button></section>
-<details class="start-section accounts-section" open><summary>Konton<span class="section-chevron"></span></summary><div class="account-table-scroll"><table class="account-table"><thead><tr><th>Namn</th><th>Kontonummer</th><th>Kvar att utnyttja kr</th><th>Saldo kr</th></tr></thead><tbody>${accounts.map(([name,number,available,balance])=>`<tr><td><button class="link-button" data-account="${name}">${name}</button></td><td>${number}</td><td>${available}</td><td>${balance}</td></tr>`).join('')}</tbody><tfoot><tr><th colspan="3">Totalt</th><td>106 289,80</td></tr></tfoot></table></div><div class="accounts-footer"><a href="#konton">Konton</a></div></details>
-${sections.map(([title,key],i)=>`${i===1?'<a class="start-section savings-link" href="#spara">Spara<span aria-hidden="true">⟶</span></a>':''}<details class="start-section"><summary>${title}<span class="section-chevron"></span></summary><div class="section-body">${key==='cards'?'<p>Visa · •••• 1234</p><button class="link-button" data-action="cards">Hantera kort</button>':`<p>${title==='Lån'?'Bolån · 1 250 000,00 kr':title==='Pension'?'Pensionssparande · 152 400,00 kr':'Hemförsäkring · Aktiv'}</p><button class="link-button" data-action="overview">Visa detaljer</button>`}</div></details>`).join('')}
+function icon(key) {
+    if (key === 'payment')
+        return '<span class="icon payment-icon"><img src="assets/payment-24.svg" alt="" aria-hidden="true" width="24" height="24"></span>';
+    if (key === 'person')
+        return '<span class="icon initials">NN</span>';
+    if (key === 'bankid')
+        return '<span class="icon bankid">iD</span>';
+    if (key === 'swish')
+        return '<span class="icon"><span class="swish"></span></span>';
+    return `<span class="icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[key] || paths.document}" ${key === 'more' ? 'stroke-width="4"' : ''}/></svg></span>`;
+}
+
+let state;
+try {
+    state = JSON.parse(localStorage.getItem('lf-prototype') || '{}');
+}
+catch {
+    state = {};
+}
+state.profile = {
+    name: 'Namn Namsson',
+    email: 'namn.namsson@example.se',
+    phone: '070-123 45 67',
+    ...state.profile
+};
+state.settings = state.settings || {};
+
+function save() {
+    try {
+        localStorage.setItem('lf-prototype', JSON.stringify(state));
+    }
+    catch {
+        toast('Ändringen gäller under den här sessionen.');
+    }
+}
+
+const navItems = [
+    ['Start', 'home', 'start'],
+    ['Konton & kort', 'card', 'konton'],
+    ['Betala & överföra', 'payment', 'betala'],
+    ['Spara', 'pig', 'spara'],
+    ['Låna', 'loan', 'lana'],
+    ['Försäkra', 'umbrella', 'forsakra'],
+    ['Pension', 'pension', 'pension'],
+    ['Kontakta oss', 'contact', 'kontakt'],
+    ['Mer', 'more', 'mer'],
+    ['Länsförsäkringar.se', 'external', 'website']
+];
+
+const groups = [
+    [
+        'Profil, dina data och dokument',
+        [
+            ['person', 'profile', 'Namn Namsson', 'Kontaktuppgifter, kundkännedom, konto för in- och utbetalning'],
+            ['document', 'documents', 'Avtal och dokument'],
+            ['consent', 'consents', 'Samtycken']
+        ]
+    ],
+    [
+        'Betal- och säkerhetstjänster',
+        [
+            ['bankid', 'bankid', 'Hantera BankID'],
+            ['swish', 'swish', 'Hantera Swish'],
+            ['shield', 'fraud', 'Extra bedrägeriskydd']
+        ]
+    ],
+    [
+        'Inställningar',
+        [
+            ['bell', 'notifications', 'Notiser'],
+            ['e', 'receive', 'Ta emot dokument'],
+            ['e', 'invoice', 'Ta emot e-faktura'],
+            ['mailbox', 'marketing', 'Utskick från oss']
+        ]
+    ]
+];
+
+function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[c]));
+}
+
+function row(i) {
+    return `<button class="row" data-action="${i[1]}">${icon(i[0])}<span class="copy">${esc(i[1] === 'profile' ? state.profile.name : i[2])}${i[3] ? `<small>${i[3]}</small>` : ''}</span><span class="chevron" aria-hidden="true"></span></button>`;
+}
+
+function card(title, body) {
+    return `<section class="card"><h2>${title}</h2>${body}</section>`;
+}
+
+const main = document.querySelector('#main'), dialog = document.querySelector('#dialog');
+
+let signedOut = false;
+
+function render() {
+    if (signedOut)
+        return;
+    let route = location.hash.slice(1) || 'start';
+    if (!navItems.some(i => i[2] === route))
+        route = 'mer';
+    document.querySelector('#nav').innerHTML = navItems.map(i => `<a href="${i[2] === 'website' ? 'https://www.lansforsakringar.se/' : '#' + i[2]}" ${i[2] === 'website' ? 'target="_blank" rel="noopener"' : ''} ${i[2] === route ? 'aria-current="page"' : ''}>${icon(i[1])}${i[0]}</a>`).join('');
+    main.classList.toggle('start-page', route === 'start');
+    main.innerHTML = route === 'start' ? '' : `<h1>${navItems.find(i => i[2] === route)[0]}</h1>`;
+    if (route === 'mer')
+        main.innerHTML += groups.map(g => card(g[0], g[1].map(row).join(''))).join('');
+    else if (route === 'start')
+        main.innerHTML = startPage();
+    else if (route === 'konton')
+        main.innerHTML += card('Mina konton', '<div class="page-note">Privatkonto <span class="balance">24 580,00 kr</span><small>Exempelkonto · 9020 12 345 67</small></div>' + row(['card', 'transactions', 'Visa transaktioner']) + row(['card', 'cards', 'Hantera kort']));
+    else if (route === 'betala')
+        main.innerHTML += card('Betalningar och överföringar', row(['pay', 'transfer', 'Gör en överföring']) + row(['e', 'invoice', 'Hantera e-faktura']) + row(['swish', 'swish', 'Hantera Swish']));
+    else if (route === 'kontakt')
+        main.innerHTML += card('Hur kan vi hjälpa dig?', row(['mail', 'message', 'Skriv till oss']) + row(['contact', 'contact', 'Kontaktuppgifter']));
+    else {
+        const data = {
+            spara: ['Mitt sparande', 'Sparkonto', '85 200,00 kr'],
+            lana: ['Mina lån', 'Bolån', '1 250 000,00 kr'],
+            forsakra: ['Mina försäkringar', 'Hemförsäkring', 'Aktiv'],
+            pension: ['Min pension', 'Pensionssparande', '152 400,00 kr']
+        }[route];
+        main.innerHTML += card(data[0], `<div class="page-note">${data[1]}<span class="balance">${data[2]}</span><p class="muted">Exempeldata för prototypen.</p></div>` + row(['document', 'overview', 'Visa detaljer']));
+    }
+    document.querySelector('#nav').classList.remove('open');
+    document.querySelector('#menu-toggle').setAttribute('aria-expanded', 'false');
+}
+
+function startPage() {
+    const accounts = [
+        ['Sommarhuset', '9022.10.367.XX', '15 046,23', '15 046,23'],
+        ['Privatkonto', '9022.10.377.XX', '16 243,00', '16 243,00'],
+        ['Sparkonto', '9022.10.338.XX', '30 000,18', '30 000,18'],
+        ['Fasträntekonto m 3 månaders uppsägning', '9021.10.149.XX', '', '45 000,39']
+    ];
+    const sections = [
+        ['Kort', 'cards'],
+        ['Lån', 'loan'],
+        ['Försäkringar', 'umbrella'],
+        ['Försäkringar inom pension och liv', 'umbrella'],
+        ['Pension', 'pension']
+    ];
+    return `<section class="start-hero" aria-label="Välkommen Lisa Flitig"><div class="hero-label"><span>15% · Din bonusnivå Guldkund</span><h1>Lisa Flitig</h1></div></section>
+<div class="start-shortcuts" aria-label="Genvägar">${[
+        ['home', 'Översikt', 'accounts'],
+        ['payment', 'Betala', 'transfer'],
+        ['transfer', 'Överför', 'transfer'],
+        ['pig', 'Spara', 'savings'],
+        ['document', 'Dokument', 'documents'],
+        ['bankid', 'BankID', 'bankid']
+    ].map(([key, label, action]) => `<button data-action="${action}">${icon(key)}<span>${label}</span></button>`).join('')}</div>
+<div class="start-content">
+<details class="start-section accounts-section" open><summary>Konton<span class="section-chevron"></span></summary><div class="account-table-scroll"><table class="account-table"><thead><tr><th>Namn</th><th>Kontonummer</th><th>Kvar att utnyttja kr</th><th>Saldo kr</th></tr></thead><tbody>${accounts.map(([name, number, available, balance]) => `<tr><td><button class="link-button" data-account="${name}">${name}</button></td><td>${number}</td><td>${available}</td><td>${balance}</td></tr>`).join('')}</tbody><tfoot><tr><th colspan="3">Totalt</th><td>106 289,80</td></tr></tfoot></table></div><div class="accounts-footer"><a href="#konton">Konton</a></div></details>
+${sections.map(([title, key], i) => `${i === 1 ? '<a class="start-section savings-link" href="#spara">Spara<span aria-hidden="true">⟶</span></a>' : ''}<details class="start-section"><summary>${title}<span class="section-chevron"></span></summary><div class="section-body">${key === 'cards' ? '<p>Visa · •••• 1234</p><button class="link-button" data-action="cards">Hantera kort</button>' : `<p>${title === 'Lån' ? 'Bolån · 1 250 000,00 kr' : title === 'Pension' ? 'Pensionssparande · 152 400,00 kr' : 'Hemförsäkring · Aktiv'}</p><button class="link-button" data-action="overview">Visa detaljer</button>`}</div></details>`).join('')}
 <section class="bonus-banner"><div class="bonus-seal" aria-hidden="true"><span>BONUS</span></div><div><h2><button class="link-button" data-action="bonus">Guldkund</button></h2><p>Ditt hushålls rabatt under senaste året: <strong>702 kr</strong></p><button class="bonus-link" data-action="bonus">Läs mer om bonusen <span aria-hidden="true">⟶</span></button></div></section>
 <h2 class="news-heading">Aktuellt för dig</h2><article class="news-card dismissible"><div class="news-photo" role="img" aria-label="Barn med en färgglad drake"></div><div class="news-copy"><button class="dismiss" data-dismiss aria-label="Stäng aktuellt erbjudande">×</button><h2>Kolla gärna in våra nya fonder för barnsparande</h2><p>Detta är en sträng som innehåller exakt 170 tecken. Den är noggrant utformad för att uppfylla ditt önskemål och inkluderar både bokstäver och mellanslag.</p><button class="link-button" data-action="childsavings">Mer information hittar du här ${icon('external')}</button></div></article></div>`;
 }
-paths.transfer='M3 8h14l-4-4 M17 8l-4 4 M21 16H7l4-4 M7 16l4 4';
 
-function toast(text){const t=document.querySelector('#toast');t.textContent=text;t.classList.add('visible');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.remove('visible'),3000)}function open(title,html){document.querySelector('#dialog-title').textContent=title;document.querySelector('#dialog-body').innerHTML=html;dialog.showModal()}function actions(label='Spara'){return `<div class="actions"><button type="button" class="outline" data-close>Avbryt</button><button class="primary" type="submit">${label}</button></div>`}function field(label,name,value,type='text'){return `<label class="field">${label}<input name="${name}" type="${type}" value="${esc(value)}" required></label>`}function toggle(label,key,defaultOn=true){return `<div class="setting"><span>${label}</span><label class="switch"><input type="checkbox" data-setting="${key}" aria-label="${label}" ${(state.settings[key]??defaultOn)?'checked':''}><span></span></label></div>`}
-function settings(title,items,note){open(title,`<p>${note}</p>${items.map(i=>toggle(...i)).join('')}<div class="actions"><button class="primary" data-close>Klart</button></div>`)}
-function act(id){switch(id){case'savings':location.hash='spara';break;
-case'verifiedaccount':open('Konto för in- och utbetalning',`<form data-form="verifiedaccount">${field('Clearingnummer','clearing','', 'text')}${field('Kontonummer','account','', 'text')}<p class="muted">Kontot sparas lokalt som exempeldata i prototypen.</p>${actions('Spara konto')}</form>`);break;
-case'bonus':open('Guldkund', '<p>Din bonusnivå är 15%.</p><p>Ditt hushålls rabatt under senaste året: <strong>702 kr</strong></p>');break;
-case'childsavings':open('Fonder för barnsparande','<p>Här kan du utforska sparande till barn.</p><button class="link-button" data-action="savings">Visa mitt sparande</button>');break;
-case'profile':open('Min profil',`<form data-form="profile">${field('Namn','name',state.profile.name)}${field('E-post','email',state.profile.email,'email')}${field('Mobilnummer','phone',state.profile.phone,'tel')}<p class="muted">Uppgifterna sparas bara i din webbläsare.</p>${actions()}</form>`);break;
-case'documents':open('Avtal och dokument','<p>Dina dokument och avtal.</p>'+['Kontoavtal','Årsbesked 2025','Försäkringsbrev'].map(t=>`<button class="doc" data-download="${t}"><span>${t}</span><span>Hämta ↓</span></button>`).join('')+'<p class="muted">Exempeldokument för prototypen.</p>');break;
-case'consents':settings('Samtycken',[['Personliga erbjudanden','offers',false],['Analys för bättre service','analysis',false]],'Välj vilka samtycken du vill lämna. Du kan ändra dem när som helst.');break;
-case'notifications':settings('Notiser',[['Betalningar och överföringar','payments'],['Nya dokument','documents'],['Säkerhetshändelser','security']], 'Välj vilka notiser du vill få.');break;
-case'receive':settings('Ta emot dokument',[['Ta emot dokument digitalt','digital']], 'Dina dokument finns i Avtal och dokument.');break;
-case'invoice':settings('Ta emot e-faktura',[['Aktivera e-faktura','invoice',false],['Notis när en e-faktura kommer','invoiceNotice']], 'Hantera hur du tar emot dina fakturor.');break;
-case'marketing':settings('Utskick från oss',[['Utskick via e-post','marketingEmail',false],['Utskick via SMS','marketingSms',false]],'Välj hur du vill få nyheter och erbjudanden.');break;
-case'fraud':settings('Extra bedrägeriskydd',[['Aktivera extra bedrägeriskydd','fraud',false]],'Ett extra skydd för dina betalningar. I prototypen simuleras aktiveringen.');break;
-case'bankid':open('Hantera BankID','<div class="notice">Mobilt BankID · Den här enheten<br><small>Giltigt till 2027-06-30 · Exempeldata</small></div><p>Hantera ett befintligt BankID eller beställ ett nytt.</p><div class="actions"><button class="outline" data-action="blockbankid">Spärra</button><button class="primary" data-action="newbankid">Beställ nytt</button></div>');break;
-case'blockbankid':open('Spärra BankID','<p>Vill du spärra ditt exempel-BankID? Ingen riktig tjänst påverkas.</p><div class="actions"><button class="outline" data-close>Avbryt</button><button class="primary" data-simulate="Exempel-BankID har spärrats">Spärra BankID</button></div>');break;
-case'newbankid':open('Beställ nytt BankID','<p>I den riktiga tjänsten fortsätter du med identifiering. Här kan du prova beställningsflödet.</p><button class="primary" data-simulate="Beställningen av exempel-BankID är klar">Bekräfta beställning</button>');break;
-case'swish':open('Hantera Swish',`<form data-form="swish">${field('Mobilnummer','phone',state.swishPhone||state.profile.phone,'tel')}<label class="field">Beloppsgräns per dag<select name="limit">${[1000,3000,5000,10000].map(v=>`<option value="${v}" ${String(state.swishLimit||3000)===String(v)?'selected':''}>${v.toLocaleString('sv-SE')} kr</option>`).join('')}</select></label><p class="muted">Ändringen simuleras i prototypen.</p>${actions()}</form>`);break;
-case'inbox':open('Inkorg',`<button class="doc" data-action="inboxmessage">${state.read?'':'● '}Välkommen till Mina sidor <span>→</span></button><p class="muted">Exempelmeddelande · 11 oktober 2026</p>`);break;
-case'inboxmessage':state.read=true;save();open('Välkommen till Mina sidor','<p>Här kan du se dina tjänster, hitta dokument och ändra dina inställningar.</p><p>Den här prototypen innehåller exempeldata. Prova gärna alternativen under Mer.</p>');break;
-case'feedback':open('Tyck till','<form data-form="feedback"><p>Hur var din upplevelse av Mina sidor?</p><label class="field">Ditt omdöme<select name="rating"><option>Mycket bra</option><option>Bra</option><option>Okej</option><option>Mindre bra</option></select></label><label class="field">Din kommentar<textarea name="comment" placeholder="Berätta vad du tycker…" required></textarea></label><p class="muted">Din feedback sparas lokalt i prototypen.</p>'+actions('Skicka')+'</form>');break;
-case'transfer':open('Gör en överföring','<form data-form="transfer"><p class="muted">Demoöverföring med exempeldata.</p><label class="field">Från konto<select name="from"><option>Privatkonto · 24 580,00 kr</option></select></label><label class="field">Till konto<select name="to"><option>Sparkonto</option></select></label><label class="field">Belopp (kr)<input name="amount" type="number" min="1" max="24580" step="0.01" required></label>'+actions('Fortsätt')+'</form>');break;
-case'transactions':open('Transaktioner','<div class="list-item"><strong>Matbutik</strong>−428,50 kr · 10 oktober</div><div class="list-item"><strong>Lön</strong>+28 500,00 kr · 25 september</div><p class="muted">Exempeltransaktioner.</p>');break;
-case'cards':settings('Hantera kort',[['Kortet är öppet för internetköp','onlineCard'],['Kortet är öppet för köp utomlands','abroadCard']], 'Visa · •••• 1234 · Exempelkort');break;
-case'message':open('Skriv till oss','<form data-form="message">'+field('Ämne','subject','')+'<label class="field">Meddelande<textarea name="message" required></textarea></label><p class="muted">Meddelandet sparas lokalt och skickas inte till LF.</p>'+actions('Skicka')+'</form>');break;
-case'contact':open('Kontakta oss','<p>Vill du kontakta ditt lokala länsförsäkringsbolag?</p><a href="https://www.lansforsakringar.se/" target="_blank" rel="noopener">Hitta ditt länsförsäkringsbolag ↗</a>');break;
-case'accounts':location.hash='konton';break;
-case'overview':open('Detaljer','<p>Det här är en översikt med exempeldata. Dina personliga tjänster visas här i den riktiga tjänsten.</p>');break;
-case'logout':open('Logga ut','<p>Vill du logga ut ur prototypen?</p><div class="actions"><button class="outline" data-close>Avbryt</button><button class="primary" data-signout>Logga ut</button></div>');break;}}
-document.querySelector('#inbox').innerHTML=icon('mail')+'Inkorg';document.querySelector('#logout').innerHTML=icon('logout')+'Logga ut';document.querySelector('#inbox').onclick=()=>act('inbox');document.querySelector('#logout').onclick=()=>act('logout');document.querySelector('#feedback').onclick=()=>act('feedback');document.querySelector('#close-dialog').onclick=()=>dialog.close();dialog.addEventListener('click',e=>{if(e.target===dialog){const b=dialog.getBoundingClientRect();if(e.clientX<b.left||e.clientX>b.right||e.clientY<b.top||e.clientY>b.bottom)dialog.close()}});document.querySelector('#menu-toggle').onclick=()=>{const on=document.querySelector('#nav').classList.toggle('open');document.querySelector('#menu-toggle').setAttribute('aria-expanded',on)};
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.hasAttribute('data-dismiss'))b.closest('.dismissible').remove();if(b.dataset.account)open(b.dataset.account,'<p>Kontouppgifter och saldo visas i kontoöversikten.</p><button class="link-button" data-action="transactions">Visa transaktioner</button>');if(b.dataset.action){if(dialog.open)dialog.close();act(b.dataset.action)}if(b.hasAttribute('data-close'))dialog.close();if(b.dataset.simulate){dialog.close();toast(b.dataset.simulate)}if(b.dataset.info)open(b.dataset.info,'<p>Det här är en interaktiv prototyp med exempeldata. Inställningar sparas i din webbläsare.</p><p>För fullständig information, besök Länsförsäkringars webbplats.</p><a href="https://www.lansforsakringar.se/" target="_blank" rel="noopener">Länsförsäkringar.se ↗</a>');if(b.dataset.download){const url=URL.createObjectURL(new Blob([b.dataset.download+'\n\nExempeldokument för LF-prototypen.\nDetta dokument är inte ett giltigt avtal.'],{type:'text/plain;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=b.dataset.download+'.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Exempeldokument hämtat')}if(b.hasAttribute('data-signout')){dialog.close();signedOut=true;document.querySelector('.layout').style.display='block';document.querySelector('#nav').style.display='none';main.innerHTML='<div class="signed-out"><h1>Du är utloggad</h1><p>Tack för att du provade Mina sidor.</p><button class="primary" data-signin>Logga in i prototypen</button></div>';document.querySelector('.header-actions').style.visibility='hidden'}if(b.hasAttribute('data-signin')){signedOut=false;document.querySelector('.layout').style.display='';document.querySelector('#nav').style.display='';document.querySelector('.header-actions').style.visibility='';render()}});
-document.addEventListener('change',e=>{if(e.target.dataset.setting){state.settings[e.target.dataset.setting]=e.target.checked;save();toast('Inställningen har sparats')}});document.addEventListener('submit',e=>{const f=e.target.dataset.form;if(!f)return;e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(f==='verifiedaccount'){state.verifiedaccount=data;save();dialog.close();toast('Ditt exempelkonto har sparats')}else if(f==='profile'){state.profile=data;save();render();dialog.close();toast('Dina kontaktuppgifter har sparats')}else if(f==='swish'){state.swishPhone=data.phone;state.swishLimit=data.limit;save();dialog.close();toast('Dina Swish-inställningar har sparats')}else if(f==='transfer'){dialog.close();open('Bekräfta överföring',`<p>Från Privatkonto till Sparkonto</p><p class="balance">${Number(data.amount).toLocaleString('sv-SE',{minimumFractionDigits:2})} kr</p><p class="muted">Demoöverföring – inga pengar flyttas.</p><div class="actions"><button class="outline" data-close>Avbryt</button><button class="primary" data-simulate="Demoöverföringen är klar">Bekräfta</button></div>`)}else{state[f]=data;save();dialog.close();toast(f==='feedback'?'Tack! Din feedback har sparats lokalt.':'Ditt demomeddelande har sparats.')}});window.addEventListener('hashchange',render);render();
+paths.transfer = 'M3 8h14l-4-4 M17 8l-4 4 M21 16H7l4-4 M7 16l4 4';
+
+function toast(text) {
+    const t = document.querySelector('#toast');
+    t.textContent = text;
+    t.classList.add('visible');
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => t.classList.remove('visible'), 3000);
+}
+
+function open(title, html) {
+    document.querySelector('#dialog-title').textContent = title;
+    document.querySelector('#dialog-body').innerHTML = html;
+    dialog.showModal();
+}
+
+function actions(label = 'Spara') {
+    return `<div class="actions"><button type="button" class="outline" data-close>Avbryt</button><button class="primary" type="submit">${label}</button></div>`;
+}
+
+function field(label, name, value, type = 'text') {
+    return `<label class="field">${label}<input name="${name}" type="${type}" value="${esc(value)}" required></label>`;
+}
+
+function toggle(label, key, defaultOn = true) {
+    return `<div class="setting"><span>${label}</span><label class="switch"><input type="checkbox" data-setting="${key}" aria-label="${label}" ${(state.settings[key] ?? defaultOn) ? 'checked' : ''}><span></span></label></div>`;
+}
+
+function settings(title, items, note) {
+    open(title, `<p>${note}</p>${items.map(i => toggle(...i)).join('')}<div class="actions"><button class="primary" data-close>Klart</button></div>`);
+}
+
+function act(id) {
+    switch (id) {
+        case 'savings':
+            location.hash = 'spara';
+            break;
+        case 'verifiedaccount':
+            open('Konto för in- och utbetalning', `<form data-form="verifiedaccount">${field('Clearingnummer', 'clearing', '', 'text')}${field('Kontonummer', 'account', '', 'text')}<p class="muted">Kontot sparas lokalt som exempeldata i prototypen.</p>${actions('Spara konto')}</form>`);
+            break;
+        case 'bonus':
+            open('Guldkund', '<p>Din bonusnivå är 15%.</p><p>Ditt hushålls rabatt under senaste året: <strong>702 kr</strong></p>');
+            break;
+        case 'childsavings':
+            open('Fonder för barnsparande', '<p>Här kan du utforska sparande till barn.</p><button class="link-button" data-action="savings">Visa mitt sparande</button>');
+            break;
+        case 'profile':
+            open('Min profil', `<form data-form="profile">${field('Namn', 'name', state.profile.name)}${field('E-post', 'email', state.profile.email, 'email')}${field('Mobilnummer', 'phone', state.profile.phone, 'tel')}<p class="muted">Uppgifterna sparas bara i din webbläsare.</p>${actions()}</form>`);
+            break;
+        case 'documents':
+            open('Avtal och dokument', '<p>Dina dokument och avtal.</p>' + ['Kontoavtal', 'Årsbesked 2025', 'Försäkringsbrev'].map(t => `<button class="doc" data-download="${t}"><span>${t}</span><span>Hämta ↓</span></button>`).join('') + '<p class="muted">Exempeldokument för prototypen.</p>');
+            break;
+        case 'consents':
+            settings('Samtycken', [
+                ['Personliga erbjudanden', 'offers', false],
+                ['Analys för bättre service', 'analysis', false]
+            ], 'Välj vilka samtycken du vill lämna. Du kan ändra dem när som helst.');
+            break;
+        case 'notifications':
+            settings('Notiser', [
+                ['Betalningar och överföringar', 'payments'],
+                ['Nya dokument', 'documents'],
+                ['Säkerhetshändelser', 'security']
+            ], 'Välj vilka notiser du vill få.');
+            break;
+        case 'receive':
+            settings('Ta emot dokument', [
+                ['Ta emot dokument digitalt', 'digital']
+            ], 'Dina dokument finns i Avtal och dokument.');
+            break;
+        case 'invoice':
+            settings('Ta emot e-faktura', [
+                ['Aktivera e-faktura', 'invoice', false],
+                ['Notis när en e-faktura kommer', 'invoiceNotice']
+            ], 'Hantera hur du tar emot dina fakturor.');
+            break;
+        case 'marketing':
+            settings('Utskick från oss', [
+                ['Utskick via e-post', 'marketingEmail', false],
+                ['Utskick via SMS', 'marketingSms', false]
+            ], 'Välj hur du vill få nyheter och erbjudanden.');
+            break;
+        case 'fraud':
+            settings('Extra bedrägeriskydd', [
+                ['Aktivera extra bedrägeriskydd', 'fraud', false]
+            ], 'Ett extra skydd för dina betalningar. I prototypen simuleras aktiveringen.');
+            break;
+        case 'bankid':
+            open('Hantera BankID', '<div class="notice">Mobilt BankID · Den här enheten<br><small>Giltigt till 2027-06-30 · Exempeldata</small></div><p>Hantera ett befintligt BankID eller beställ ett nytt.</p><div class="actions"><button class="outline" data-action="blockbankid">Spärra</button><button class="primary" data-action="newbankid">Beställ nytt</button></div>');
+            break;
+        case 'blockbankid':
+            open('Spärra BankID', '<p>Vill du spärra ditt exempel-BankID? Ingen riktig tjänst påverkas.</p><div class="actions"><button class="outline" data-close>Avbryt</button><button class="primary" data-simulate="Exempel-BankID har spärrats">Spärra BankID</button></div>');
+            break;
+        case 'newbankid':
+            open('Beställ nytt BankID', '<p>I den riktiga tjänsten fortsätter du med identifiering. Här kan du prova beställningsflödet.</p><button class="primary" data-simulate="Beställningen av exempel-BankID är klar">Bekräfta beställning</button>');
+            break;
+        case 'swish':
+            open('Hantera Swish', `<form data-form="swish">${field('Mobilnummer', 'phone', state.swishPhone || state.profile.phone, 'tel')}<label class="field">Beloppsgräns per dag<select name="limit">${[1000, 3000, 5000, 10000].map(v => `<option value="${v}" ${String(state.swishLimit || 3000) === String(v) ? 'selected' : ''}>${v.toLocaleString('sv-SE')} kr</option>`).join('')}</select></label><p class="muted">Ändringen simuleras i prototypen.</p>${actions()}</form>`);
+            break;
+        case 'inbox':
+            open('Inkorg', `<button class="doc" data-action="inboxmessage">${state.read ? '' : '● '}Välkommen till Mina sidor <span>→</span></button><p class="muted">Exempelmeddelande · 11 oktober 2026</p>`);
+            break;
+        case 'inboxmessage':
+            state.read = true;
+            save();
+            open('Välkommen till Mina sidor', '<p>Här kan du se dina tjänster, hitta dokument och ändra dina inställningar.</p><p>Den här prototypen innehåller exempeldata. Prova gärna alternativen under Mer.</p>');
+            break;
+        case 'feedback':
+            open('Tyck till', '<form data-form="feedback"><p>Hur var din upplevelse av Mina sidor?</p><label class="field">Ditt omdöme<select name="rating"><option>Mycket bra</option><option>Bra</option><option>Okej</option><option>Mindre bra</option></select></label><label class="field">Din kommentar<textarea name="comment" placeholder="Berätta vad du tycker…" required></textarea></label><p class="muted">Din feedback sparas lokalt i prototypen.</p>' + actions('Skicka') + '</form>');
+            break;
+        case 'transfer':
+            open('Gör en överföring', '<form data-form="transfer"><p class="muted">Demoöverföring med exempeldata.</p><label class="field">Från konto<select name="from"><option>Privatkonto · 24 580,00 kr</option></select></label><label class="field">Till konto<select name="to"><option>Sparkonto</option></select></label><label class="field">Belopp (kr)<input name="amount" type="number" min="1" max="24580" step="0.01" required></label>' + actions('Fortsätt') + '</form>');
+            break;
+        case 'transactions':
+            open('Transaktioner', '<div class="list-item"><strong>Matbutik</strong>−428,50 kr · 10 oktober</div><div class="list-item"><strong>Lön</strong>+28 500,00 kr · 25 september</div><p class="muted">Exempeltransaktioner.</p>');
+            break;
+        case 'cards':
+            settings('Hantera kort', [
+                ['Kortet är öppet för internetköp', 'onlineCard'],
+                ['Kortet är öppet för köp utomlands', 'abroadCard']
+            ], 'Visa · •••• 1234 · Exempelkort');
+            break;
+        case 'message':
+            open('Skriv till oss', '<form data-form="message">' + field('Ämne', 'subject', '') + '<label class="field">Meddelande<textarea name="message" required></textarea></label><p class="muted">Meddelandet sparas lokalt och skickas inte till LF.</p>' + actions('Skicka') + '</form>');
+            break;
+        case 'contact':
+            open('Kontakta oss', '<p>Vill du kontakta ditt lokala länsförsäkringsbolag?</p><a href="https://www.lansforsakringar.se/" target="_blank" rel="noopener">Hitta ditt länsförsäkringsbolag ↗</a>');
+            break;
+        case 'accounts':
+            location.hash = 'konton';
+            break;
+        case 'overview':
+            open('Detaljer', '<p>Det här är en översikt med exempeldata. Dina personliga tjänster visas här i den riktiga tjänsten.</p>');
+            break;
+        case 'logout':
+            open('Logga ut', '<p>Vill du logga ut ur prototypen?</p><div class="actions"><button class="outline" data-close>Avbryt</button><button class="primary" data-signout>Logga ut</button></div>');
+            break;
+    }
+}
+
+document.querySelector('#inbox').innerHTML = icon('mail') + 'Inkorg';
+document.querySelector('#logout').innerHTML = icon('logout') + 'Logga ut';
+document.querySelector('#inbox').onclick = () => act('inbox');
+document.querySelector('#logout').onclick = () => act('logout');
+document.querySelector('#feedback').onclick = () => act('feedback');
+document.querySelector('#close-dialog').onclick = () => dialog.close();
+dialog.addEventListener('click', e => {
+    if (e.target === dialog) {
+        const b = dialog.getBoundingClientRect();
+        if (e.clientX < b.left || e.clientX > b.right || e.clientY < b.top || e.clientY > b.bottom)
+            dialog.close();
+    }
+});
+document.querySelector('#menu-toggle').onclick = () => {
+    const on = document.querySelector('#nav').classList.toggle('open');
+    document.querySelector('#menu-toggle').setAttribute('aria-expanded', on);
+};
+document.addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b)
+        return;
+    if (b.hasAttribute('data-dismiss'))
+        b.closest('.dismissible').remove();
+    if (b.dataset.account)
+        open(b.dataset.account, '<p>Kontouppgifter och saldo visas i kontoöversikten.</p><button class="link-button" data-action="transactions">Visa transaktioner</button>');
+    if (b.dataset.action) {
+        if (dialog.open)
+            dialog.close();
+        act(b.dataset.action);
+    }
+    if (b.hasAttribute('data-close'))
+        dialog.close();
+    if (b.dataset.simulate) {
+        dialog.close();
+        toast(b.dataset.simulate);
+    }
+    if (b.dataset.info)
+        open(b.dataset.info, '<p>Det här är en interaktiv prototyp med exempeldata. Inställningar sparas i din webbläsare.</p><p>För fullständig information, besök Länsförsäkringars webbplats.</p><a href="https://www.lansforsakringar.se/" target="_blank" rel="noopener">Länsförsäkringar.se ↗</a>');
+    if (b.dataset.download) {
+        const url = URL.createObjectURL(new Blob([b.dataset.download + '\n\nExempeldokument för LF-prototypen.\nDetta dokument är inte ett giltigt avtal.'], { type: 'text/plain;charset=utf-8' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = b.dataset.download + '.txt';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast('Exempeldokument hämtat');
+    }
+    if (b.hasAttribute('data-signout')) {
+        dialog.close();
+        signedOut = true;
+        document.querySelector('.layout').style.display = 'block';
+        document.querySelector('#nav').style.display = 'none';
+        main.innerHTML = '<div class="signed-out"><h1>Du är utloggad</h1><p>Tack för att du provade Mina sidor.</p><button class="primary" data-signin>Logga in i prototypen</button></div>';
+        document.querySelector('.header-actions').style.visibility = 'hidden';
+    }
+    if (b.hasAttribute('data-signin')) {
+        signedOut = false;
+        document.querySelector('.layout').style.display = '';
+        document.querySelector('#nav').style.display = '';
+        document.querySelector('.header-actions').style.visibility = '';
+        render();
+    }
+});
+document.addEventListener('change', e => {
+    if (e.target.dataset.setting) {
+        state.settings[e.target.dataset.setting] = e.target.checked;
+        save();
+        toast('Inställningen har sparats');
+    }
+});
+document.addEventListener('submit', e => {
+    const f = e.target.dataset.form;
+    if (!f)
+        return;
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    if (f === 'verifiedaccount') {
+        state.verifiedaccount = data;
+        save();
+        dialog.close();
+        toast('Ditt exempelkonto har sparats');
+    }
+    else if (f === 'profile') {
+        state.profile = data;
+        save();
+        render();
+        dialog.close();
+        toast('Dina kontaktuppgifter har sparats');
+    }
+    else if (f === 'swish') {
+        state.swishPhone = data.phone;
+        state.swishLimit = data.limit;
+        save();
+        dialog.close();
+        toast('Dina Swish-inställningar har sparats');
+    }
+    else if (f === 'transfer') {
+        dialog.close();
+        open('Bekräfta överföring', `<p>Från Privatkonto till Sparkonto</p><p class="balance">${Number(data.amount).toLocaleString('sv-SE', { minimumFractionDigits: 2 })} kr</p><p class="muted">Demoöverföring – inga pengar flyttas.</p><div class="actions"><button class="outline" data-close>Avbryt</button><button class="primary" data-simulate="Demoöverföringen är klar">Bekräfta</button></div>`);
+    }
+    else {
+        state[f] = data;
+        save();
+        dialog.close();
+        toast(f === 'feedback' ? 'Tack! Din feedback har sparats lokalt.' : 'Ditt demomeddelande har sparats.');
+    }
+});
+window.addEventListener('hashchange', render);
+render();
